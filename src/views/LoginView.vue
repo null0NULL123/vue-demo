@@ -21,18 +21,34 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-
+import apiClient from '@/api'; 
 const username = ref('');
 const password = ref('');
-
+const loading = ref(false);
+const errorMessage = ref('');
 const router = useRouter();
+const token = ref('');
+const handleSubmit = async () => {
+  loading.value = true;
+  errorMessage.value = '';
+  try {
+    console.log(username.value,password.value);
 
-const handleSubmit = () => {
-    console.log('Username:', username.value);
-    console.log('Password:', password.value);
-    // 在这里添加登录逻辑
+    const response = await apiClient.loginUser({"username":username.value,"password":password.value });
+    if (response.data.code !== 0) {
+      errorMessage.value = response.data.message;
+      return;
+    }
+    console.log('登录成功:', response.data);
+    token.value = response.data.data;
+    console.log(token);
+    router.push('/home'); // 登录成功后跳转到主页
+  } catch (error) {
+    console.error('登录失败:', error);
+  } finally {
+    loading.value = false;
+  }
 };
-
 const goToRegister = () => {
     router.push({ name: 'register' });
 };
@@ -124,4 +140,6 @@ button[type="submit"]:hover {
 .additional-options button:hover {
     color: #001eff;
 }
+
+
 </style>
