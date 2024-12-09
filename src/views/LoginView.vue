@@ -1,7 +1,7 @@
 <template>
     <div class="container">
 
-        <form @submit.prevent="handleSubmit" class="login-form">
+        <form @submit.prevent="handle" class="form">
             <h1 class="form-title">论坛入口</h1>
             <div class="form-group">
                 <input type="text" id="username" v-model="username" placeholder="用户名" required />
@@ -21,33 +21,28 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import apiClient from '@/api'; 
+import apiClient from '@/api';
 const username = ref('');
 const password = ref('');
-const loading = ref(false);
 const errorMessage = ref('');
 const router = useRouter();
 const token = ref('');
-const handleSubmit = async () => {
-  loading.value = true;
-  errorMessage.value = '';
-  try {
-    console.log(username.value,password.value);
+const handle = async () => {
+    errorMessage.value = '';
+    try {
+        console.log(username.value, password.value);
 
-    const response = await apiClient.loginUser({"username":username.value,"password":password.value });
-    if (response.data.code !== 0) {
-      errorMessage.value = response.data.message;
-      return;
+        const response = await apiClient.loginUser({ "username": username.value, "password": password.value });
+        if (response.data.code !== 0) {
+            errorMessage.value = response.data.msg;
+            return;
+        }
+        console.log('登录成功:', response.data);
+        token.value = response.data.data;
+        router.push('/home'); // 登录成功后跳转到主页
+    } catch (error) {
+        console.error('登录失败:', error);
     }
-    console.log('登录成功:', response.data);
-    token.value = response.data.data;
-    console.log(token);
-    router.push('/home'); // 登录成功后跳转到主页
-  } catch (error) {
-    console.error('登录失败:', error);
-  } finally {
-    loading.value = false;
-  }
 };
 const goToRegister = () => {
     router.push({ name: 'register' });
@@ -72,7 +67,7 @@ const goToForgotPassword = () => {
     height: 100vh;
 }
 
-.login-form {
+.form {
     background: rgba(255, 255, 255, 0.8);
     padding: 40px;
     /* 增加内边距 */
@@ -140,6 +135,4 @@ button[type="submit"]:hover {
 .additional-options button:hover {
     color: #001eff;
 }
-
-
 </style>
