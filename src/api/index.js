@@ -1,29 +1,30 @@
 import axios from 'axios';
-
 const apiClient = axios.create({
-    baseURL: 'http://localhost:3000/',
+    baseURL: '/api',
     withCredentials: true,
     timeout: 30000,
 });
-
+import {useTokenStore} from '@/stores/token.js'
 apiClient.interceptors.response.use(
   response => response,
   error => {
     if (error.code === 'ERR_NETWORK') {
         console.log(error.message);
     } else if (error.response && error.response.status === 401) {
-        localStorage.removeItem('token');
+        const tokenStore = useTokenStore();
+        tokenStore.removeToken();
         window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
+
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const tokenStore = useTokenStore();
+    if(tokenStore.token){
+        config.headers.Authorization = tokenStore.token
     }
     console.log('request', config);
     return config;
@@ -84,7 +85,9 @@ export default {
         return apiClient.patch('/user/updatePwd', passwords);
     },
     getArticleList(params) {
-        return apiClient.get(`/article?pageNum=${params.pageNum}&pageSize=${params.pageSize}`);
+        const categoryId = params.categoryId || '';
+        const state = params.state || '';
+        return apiClient.get(`/article?pageNum=${params.pageNum}&pageSize=${params.pageSize}&categoryId=${categoryId}&state=${state}`);
     },
     getArticleDetail(id) {
         return apiClient.get(`/article/detail?id=${id}`);

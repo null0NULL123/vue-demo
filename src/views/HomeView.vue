@@ -75,22 +75,26 @@ const posts = ref([]);
 const loading = ref(false);
 const selectedCategory = ref(null);
 const selectedPost = ref(null);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const state = ref(0);
+const categoryId = ref(0);
+const total = ref(0);
 
 const getCategoryName = (categoryId) => {
   const category = categories.value.find(cat => cat.id === categoryId);
   return category ? category.name : 'Uncategorized';
 };
-
+import { useTokenStore } from '@/stores/token.js' 
+const tokenStore = useTokenStore();
 const checkToken = () => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-  }
+  const token = tokenStore.token
+  console.log(token)
 };
 
 const fetchCategories = async () => {
   try {
-    const response = await apiClient.getCategoryList({ pageNum: 1, pageSize: 10 });
+    const response = await apiClient.getCategoryList();
     categories.value = response.data;
   } catch (error) {
     console.error('Failed to fetch categories:', error);
@@ -100,8 +104,12 @@ const fetchCategories = async () => {
 const fetchPosts = async () => {
   loading.value = true;
   try {
-    const response = await apiClient.getArticleList();
-    posts.value = response.data;
+    const response = await apiClient.getArticleList({
+      pageNum: currentPage.value,
+      pageSize: pageSize.value
+    });
+    posts.value = response.data.records;
+    total.value = response.data.total;
   } catch (error) {
     console.error('Failed to fetch posts:', error);
   } finally {
@@ -132,11 +140,14 @@ const navigateTo = (route) => {
   router.push({ name: route });
 };
 
-const logout = () => {
-  localStorage.removeItem('token');
-  router.push('/login');
+// const logout = () => {
+//   localStorage.removeItem('token');
+//   router.push('/login');
+// };
+const handlePageChange = (page) => {
+  currentPage.value = page;
+  fetchPosts();
 };
-
 onMounted(() => {
   checkToken();
   fetchCategories();
