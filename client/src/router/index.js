@@ -1,55 +1,36 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router'
 
+//导入组件
+import LoginVue from '@/views/Login.vue'
+import LayoutVue from '@/views/Layout.vue'
 
+import ArticleCategoryVue from '@/views/article/ArticleCategory.vue'
+import ArticleManageVue from '@/views/article/ArticleManage.vue'
+import UserAvatarVue from '@/views/user/UserAvatar.vue'
+import UserInfoVue from '@/views/user/UserInfo.vue'
+import UserResetPasswordVue from '@/views/user/UserResetPassword.vue'
+import MassageListVue from '@/views/massage/MassageList.vue'
+//定义路由关系
+const routes = [
+    { path: '/login', component: LoginVue },
+    {
+        path: '/home', component: LayoutVue,redirect:'/article/manage', children: [
+            { path: '/article/category', component: ArticleCategoryVue },
+            { path: '/article/manage', component: ArticleManageVue },
+            { path: '/user/info', component: UserInfoVue },
+            { path: '/user/avatar', component: UserAvatarVue },
+            { path: '/user/resetPassword', component: UserResetPasswordVue },
+            { path: '/massage/list', component: MassageListVue },
+            { path: '/user/logout', redirect: '/login' }
+        ]
+    }
+]
+
+//创建路由器
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: "/login",
-      name: "login",
-      component: () => import("@/views/LoginView.vue"),
-    },
-    {
-      path: "/",
-      redirect: "/home",
-    },
-    {
-        path: "/register",
-        name: "register",
-        component: () => import("@/views/RegisterView.vue"),
-    },
-    {
-        path: "/home",
-        name: "home",
-        component: () => import("@/views/HomeView.vue"),
-    },
-    {
-        path: "/profile",
-        name: "profile",
-        component: () => import("@/views/ProfileView.vue"),
-    },
-    {
-        path: "/messages",
-        name: "messages",
-        component: () => import("@/views/MessagesView.vue"),
-    },
-    {
-        path: "/create-post",
-        name: "create-post",
-        component: () => import("@/views/CreatePostView.vue"),
-    },
-    {
-        path: "/my-posts",
-        name: "my-posts",
-        component: () => import("@/views/MyPostsView.vue"),
-    },
-    // {
-    //     path: "/category",
-    //     name: "category",
-    //     component: () => import("@/views/CategoryView.vue"),
-    // },
+    history: createWebHistory(),
+    routes: routes
+})
 
-  ],
-});
-
-export default router;
+//导出路由
+export default router
