@@ -8,6 +8,7 @@ import {
     Crop,
     EditPen,
     SwitchButton,
+    HomeFilled,
     CaretBottom
 } from '@element-plus/icons-vue'
 import avatar from '@/assets/default.png'
@@ -88,9 +89,9 @@ const handleCommand = (command)=>{
                         router
                         class="top-menu"
                         style="flex: 1; justify-content: flex-end;">
-                        <el-menu-item index="/article/category">帖子首页</el-menu-item>
-                        <el-menu-item index="/article/manage">我的帖子</el-menu-item>
-                        <el-menu-item index="/massage/list">我的私信</el-menu-item> 
+                        <el-menu-item index="/article/category"><el-icon><HomeFilled /></el-icon>帖子首页</el-menu-item>
+                        <el-menu-item index="/article/manage"><el-icon><EditPen /></el-icon>我的帖子</el-menu-item>
+                        <el-menu-item index="/massage/list"><el-icon><Message /></el-icon>我的私信</el-menu-item> 
                     </el-menu>
                     <el-dropdown @command="handleCommand">
                         <div class="el-dropdown__box">

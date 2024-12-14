@@ -1,11 +1,11 @@
 <script setup>
 import {
     Edit,
-    Delete
+    Delete,
+    View
 } from '@element-plus/icons-vue'
 
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 //帖子分类数据模型
 const categorys = ref([
@@ -171,27 +171,13 @@ const searchTitle = ref('') // 添加搜索关键词变量
 
         <!-- 搜索表单 -->
         <el-form inline>
-            <el-form-item label="帖子标题：">
+            <el-form-item label="搜索：">
                 <el-input 
                     v-model="searchTitle"
                     placeholder="请输入标题关键词"
                     clearable
                     @keyup.enter="articleList"
                 ></el-input>
-            </el-form-item>
-
-            <el-form-item label="帖子分类：">
-                <el-select placeholder="请选择" v-model="categoryId">
-                    <el-option v-for="c in categorys" :key="c.id" :label="c.categoryName" :value="c.id">
-                    </el-option>
-                </el-select>
-            </el-form-item>
-
-            <el-form-item label="发布状态：">
-                <el-select placeholder="请选择" v-model="state">
-                    <el-option label="已发布" value="已发布"></el-option>
-                    <el-option label="草稿" value="草稿"></el-option>
-                </el-select>
             </el-form-item>
 
             <el-form-item>
@@ -205,12 +191,7 @@ const searchTitle = ref('') // 添加搜索关键词变量
             <el-table-column label="分类" prop="categoryName"></el-table-column>
             <el-table-column label="发表时间" prop="createTime"> </el-table-column>
             <el-table-column label="状态" prop="state"></el-table-column>
-            <el-table-column label="操作" width="100">
-                <template #default="{ row }">
-                    <el-button :icon="Edit" circle plain type="primary"></el-button>
-                    <el-button :icon="Delete" circle plain type="danger"></el-button>
-                </template>
-            </el-table-column>
+
             <template #empty>
                 <el-empty description="没有数据" />
             </template>
@@ -240,7 +221,7 @@ const searchTitle = ref('') // 添加搜索关键词变量
                         action:设置服务器接口路径
                         name:设置上传的文件字段名
                         headers:设置上传的请求头
-                        on-success:设置上传成��的回调函数
+                        on-success:设置上传成功的回调函数
                      -->
                    
                     <el-upload class="avatar-uploader" :auto-upload="true" :show-file-list="false"
