@@ -5,9 +5,6 @@ import {
 } from '@element-plus/icons-vue'
 
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user.js'
-const userStore = useUserStore()
 //帖子分类数据模型
 const categorys = ref([
     {
@@ -78,7 +75,8 @@ const articleCategoryList = async () => {
     
     categorys.value = result.data;
 }
-
+import useUserInfoStore from '@/stores/userInfo.js'
+const userInfoStore = useUserInfoStore()
 //获取帖子列表数据
 const articleList = async () => {
     let params = {
@@ -86,11 +84,12 @@ const articleList = async () => {
         pageSize: pageSize.value,
         state: state.value ? state.value : null,
     }
-    let result = await articleListService(params);
+    let originResult = await articleListService(params);
+    let result = originResult.data.items.filter(item=>item.createUser == userInfoStore.info.id)
     console.log(result)
     //渲染视图
-    total.value = result.data.total;
-    articles.value = result.data.items;
+    total.value = result.length;
+    articles.value = result;
 
     //处理数据,给数据模型扩展一个属性categoryName,分类名称
     for (let i = 0; i < articles.value.length; i++) {

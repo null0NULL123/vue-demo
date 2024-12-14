@@ -17,7 +17,7 @@ const routes = [
         path: '/home', component: LayoutVue,redirect:'/article/manage', children: [
             { path: '/article/category', component: ArticleCategoryVue },
             { path: '/article/manage', component: ArticleManageVue },
-            { path: '/user/info', component: UserInfoVue },
+            { path: '/user/userInfo', component: UserInfoVue },
             { path: '/user/avatar', component: UserAvatarVue },
             { path: '/user/resetPassword', component: UserResetPasswordVue },
             { path: '/massage/list', component: MassageListVue },

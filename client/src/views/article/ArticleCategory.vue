@@ -84,14 +84,29 @@ const articleList = async () => {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
         state: state.value ? state.value : null,
+        categoryId: categoryId.value ? categoryId.value : null
     }
     let result = await articleListService(params);
-    console.log(result)
+    
+    // 如果有搜索关键词，对结果进行筛选
+    if (searchTitle.value) {
+        // 将搜索关键词转为小写，用于不区分大小写的搜索
+        const keyword = searchTitle.value.toLowerCase();
+        
+        // 筛选标题中包含关键词的文章
+        result.data.items = result.data.items.filter(article => {
+            return article.title.toLowerCase().includes(keyword);
+        });
+        
+        // 更新总数
+        result.data.total = result.data.items.length;
+    }
+    
     //渲染视图
     total.value = result.data.total;
     articles.value = result.data.items;
 
-    //处理数据,给数据模型扩展一个属性categoryName,分类名称
+    //处理数据,给数据模型扩展categoryName属性
     for (let i = 0; i < articles.value.length; i++) {
         let article = articles.value[i];
         for (let j = 0; j < categorys.value.length; j++) {
@@ -148,19 +163,23 @@ const addArticle = async (clickState)=>{
     //刷新当前列表
     articleList()
 }
+
+const searchTitle = ref('') // 添加搜索关键词变量
 </script>
 <template>
     <el-card class="page-container">
-        <template #header>
-            <div class="header">
-                <span>帖子管理</span>
-                <div class="extra">
-                    <el-button type="primary" @click="visibleDrawer = true">添加帖子</el-button>
-                </div>
-            </div>
-        </template>
+
         <!-- 搜索表单 -->
         <el-form inline>
+            <el-form-item label="帖子标题：">
+                <el-input 
+                    v-model="searchTitle"
+                    placeholder="请输入标题关键词"
+                    clearable
+                    @keyup.enter="articleList"
+                ></el-input>
+            </el-form-item>
+
             <el-form-item label="帖子分类：">
                 <el-select placeholder="请选择" v-model="categoryId">
                     <el-option v-for="c in categorys" :key="c.id" :label="c.categoryName" :value="c.id">
@@ -174,9 +193,10 @@ const addArticle = async (clickState)=>{
                     <el-option label="草稿" value="草稿"></el-option>
                 </el-select>
             </el-form-item>
+
             <el-form-item>
                 <el-button type="primary" @click="articleList">搜索</el-button>
-                <el-button @click="categoryId = ''; state = ''">重置</el-button>
+                <el-button @click="searchTitle = ''; categoryId = ''; state = ''; articleList()">重置</el-button>
             </el-form-item>
         </el-form>
         <!-- 帖子列表 -->
@@ -220,7 +240,7 @@ const addArticle = async (clickState)=>{
                         action:设置服务器接口路径
                         name:设置上传的文件字段名
                         headers:设置上传的请求头
-                        on-success:设置上传成功的回调函数
+                        on-success:设置上传成��的回调函数
                      -->
                    
                     <el-upload class="avatar-uploader" :auto-upload="true" :show-file-list="false"

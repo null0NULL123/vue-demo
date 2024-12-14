@@ -87,13 +87,10 @@ const handleCommand = (command)=>{
                         active-text-color="#409EFF"
                         router
                         class="top-menu"
-                        style="flex: 1; margin-left: 20px;">
-                        <el-menu-item index="/article/category">帖子分类</el-menu-item>
-                        <el-menu-item index="/article/manage">帖子管理</el-menu-item>
-                        <el-menu-item index="/massage/list">私信管理</el-menu-item> 
-                        <el-menu-item index="/user/info">个人中心</el-menu-item>
-                        <el-menu-item index="/user/avatar">更换头像</el-menu-item>
-                        <el-menu-item index="/user/resetPassword">重置密码</el-menu-item>
+                        style="flex: 1; justify-content: flex-end;">
+                        <el-menu-item index="/article/category">帖子首页</el-menu-item>
+                        <el-menu-item index="/article/manage">我的帖子</el-menu-item>
+                        <el-menu-item index="/massage/list">我的私信</el-menu-item> 
                     </el-menu>
                     <el-dropdown @command="handleCommand">
                         <div class="el-dropdown__box">
@@ -102,7 +99,11 @@ const handleCommand = (command)=>{
                         </div>
                         <template #dropdown>
                             <el-dropdown-menu>
+                                <el-dropdown-item command="userInfo">个人中心</el-dropdown-item>
+                                <el-dropdown-item command="resetPassword">重置密码</el-dropdown-item>
+                                <el-dropdown-item command="avatar">更换头像</el-dropdown-item>
                                 <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown>
@@ -160,7 +161,7 @@ const handleCommand = (command)=>{
         .el-menu {
             border-right: none;
             padding: 10px;
-
+            
             .el-menu-item, .el-sub-menu__title {
                 height: 50px;
                 line-height: 50px;
