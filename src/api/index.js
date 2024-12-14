@@ -10,11 +10,12 @@ apiClient.interceptors.response.use(
   error => {
     if (error.code === 'ERR_NETWORK') {
         console.log(error.message);
-    } else if (error.response && error.response.status === 401) {
-        const tokenStore = useTokenStore();
-        tokenStore.removeToken();
-        window.location.href = '/login';
-    }
+    } 
+    // else if (error.response && error.response.status === 401) {
+    //     const tokenStore = useTokenStore();
+    //     tokenStore.removeToken();
+    //     window.location.href = '/login';
+    // }
     return Promise.reject(error);
   }
 );

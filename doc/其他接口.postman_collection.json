@@ -1,0 +1,71 @@
+{
+	"info": {
+		"_postman_id": "8d07bbd2-c0a1-40c9-8713-17dae4a729c1",
+		"name": "其他接口",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40052736",
+		"_collection_link": "https://sehomework.postman.co/workspace/SEhomework~cecefb65-8989-418d-8a47-0f30a05718aa/collection/40108107-8d07bbd2-c0a1-40c9-8713-17dae4a729c1?action=share&source=collection_link&creator=40052736"
+	},
+	"item": [
+		{
+			"name": "文件上传",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.addHeader(\"Authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbXMiOnsiaWQiOjYsInVzZXJuYW1lIjoiTGl1eHVuIn0sImV4cCI6MTczMzA2MjgxNH0.3J3vxFD2FccHTClO2pNLmgj2z53uFgVNoMsMozO6gBo\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/Administrator/Desktop/imgs/播仔0017.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:8080/upload",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"upload"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
