@@ -57,7 +57,7 @@ const login = async () => {
     const result = await userLoginService(formData)
     ElMessage.success(result.msg || 'Login successful')
     tokenStore.setToken(result.data)
-    router.push('/article/manage')
+    router.push('/article/category')
   } catch (error) {
     ElMessage.error('Login failed')
   }
