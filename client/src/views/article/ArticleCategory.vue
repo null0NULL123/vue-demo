@@ -222,13 +222,13 @@
   
   .header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 50px;
   }
   
   .search-input {
-    width: 300px;
+    width: 600px;
   }
   
   .main-content {

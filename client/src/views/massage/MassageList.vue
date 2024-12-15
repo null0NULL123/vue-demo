@@ -2,14 +2,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { messageListService, messageGetService, messageSendService } from '@/api/message.js'
 import useUserInfoStore from '@/stores/userInfo.js'
-import { getUserInfoService } from '@/api/user.js'
+import useUserPicStore from '@/stores/userPic.js'
 const userInfoStore = useUserInfoStore()
+const userPicStore = useUserPicStore()
 
 // 当前用户信息
 const currentUser = {
     id: userInfoStore.info.id,
     name: userInfoStore.info.nickname,
-    avatar: userInfoStore.info.userPic
+    avatar: userPicStore.getPic(userInfoStore.info.id)
 }
 
 // 联系人列表
@@ -24,6 +25,9 @@ const getContactList = async () => {
             sender_id: currentUser.id
         }
         const result = await messageListService(data)
+        for(let i = 0; i < result.data.data.length; i++){
+            result.data.data[i].avatar = userPicStore.getPic(result.data.data[i].id) || ''
+        }
         console.log(result);
         contacts.value = result.data.data
     } catch (error) {

@@ -97,7 +97,7 @@ const handleCommand = (command)=>{
                     </el-menu>
                     <el-dropdown @command="handleCommand">
                         <div class="el-dropdown__box">
-                            <el-avatar :size="36" :src="userPicStore.Pic?.url || avatar" />
+                            <el-avatar :size="36" :src="userPicStore.getPic(userInfoStore.info.id) || avatar" />
                             <el-icon><CaretBottom /></el-icon>
                         </div>
                         <template #dropdown>
