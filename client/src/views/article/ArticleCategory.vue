@@ -79,7 +79,10 @@
   import { ref, onMounted, watch, computed } from 'vue'
   import { ElMessage } from 'element-plus'
   import { articleCategoryListService, articleListService, articleDetailService } from '@/api/article.js'
-  
+  import  useArticlePicStore  from '@/stores/articlePic.js'
+  import useUserStore from '@/stores/user.js'
+  const userStore = useUserStore()
+  const articlePicStore = useArticlePicStore()
   const categorys = ref([])
   const articles = ref([])
   const searchTitle = ref('')
@@ -89,7 +92,7 @@
   const total = ref(0)
   const dialogVisible = ref(false)
   const currentArticle = ref({})
-  
+  const avatar = ref('')
   const filteredArticles = computed(() => {
 
     let result = articles.value.filter(article => article.state == '已发布')
@@ -128,8 +131,9 @@
       articles.value.forEach(article => {
         const category = categorys.value.find(c => c.id === article.categoryId)
         article.categoryName = category ? category.categoryName : '未分类'
+        userStore.setInfo(article.createUser)
       })
-      console.log(articles.value)
+      console.log(userStore.info)
     } catch (error) {
       console.error('Failed to fetch articles:', error)
       ElMessage.error('获取帖子列表失败')
@@ -187,7 +191,9 @@
   const showArticleDetail = async (id) => {
     try {
       const result = await articleDetailService(id)
+      console.log(result)
       currentArticle.value = result.data
+      currentArticle.value.coverImg = articlePicStore.getPic(currentArticle.value.coverImg) || avatar
       dialogVisible.value = true
     } catch (error) {
       console.error('Failed to fetch article detail:', error)
@@ -200,6 +206,7 @@
   }
   
   onMounted(() => {
+    userStore.removeInfo()
     articleCategoryList()
     articleList()
   })
