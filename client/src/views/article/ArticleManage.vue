@@ -10,13 +10,14 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { Plus } from '@element-plus/icons-vue'
 import { useTokenStore } from '@/stores/token.js'
 import useUserInfoStore from '@/stores/userInfo.js'
-import { 
-    articleCategoryListService, 
+import {
+    articleCategoryListService,
     articleListService,
     articleAddService,
     articleDeleteService
 } from '@/api/article.js'
-
+import useArticlePicStore from '@/stores/articlePic.js'
+const articlePicStore = useArticlePicStore()
 const categorys = ref([])
 const articles = ref([])
 const categoryId = ref('')
@@ -71,15 +72,37 @@ const articleList = async () => {
         }
     }
 }
+const imgUrl = ref('')
+const filename = ref('')
+const uploadSuccess = async (file) => {
+    const reader = new FileReader()
+    filename.value = file.name
+    console.log(filename.value)
+    reader.onload = (e) => {
+        const base64Image = e.target.result
+        try {
+            // 更新store中的图片信息
 
-const uploadSuccess = (result) => {
-    articleModel.value.coverImg = result.data
+            // 更新显示的图片
+            imgUrl.value = base64Image
+            ElMessage.success('图片更新成功')
+        } catch (error) {
+            console.error('保存图片失败:', error)
+            ElMessage.error('图片更新失败')
+        }
+    }
+    reader.readAsDataURL(file.raw)
 }
 
 const addArticle = async (clickState) => {
     articleModel.value.state = clickState
+    articleModel.value.coverImg = filename.value
+    articlePicStore.setPic(filename.value,
+        imgUrl.value)
+
     let result = await articleAddService(articleModel.value)
     ElMessage.success(result.msg ? result.msg : '添加成功')
+    console.log(result)
     visibleDrawer.value = false
     articleList()
 }
@@ -164,13 +187,9 @@ articleList()
                     </el-select>
                 </el-form-item>
                 <el-form-item label="帖子封面">
-                    <el-upload class="avatar-uploader" :auto-upload="true" :show-file-list="false"
-                    action="/api/upload"
-                    name="file"
-                    :headers="{'Authorization':tokenStore.token}"
-                    :on-success="uploadSuccess"
-                    >
-                        <img v-if="articleModel.coverImg" :src="articleModel.coverImg" class="avatar" />
+                    <el-upload class="avatar-uploader" :auto-upload="false" :show-file-list="false"
+                        :on-change="uploadSuccess">
+                        <img v-if="imgUrl" :src="imgUrl" class="avatar" alt="" />
                         <el-icon v-else class="avatar-uploader-icon">
                             <Plus />
                         </el-icon>
@@ -242,4 +261,3 @@ articleList()
     }
 }
 </style>
-
