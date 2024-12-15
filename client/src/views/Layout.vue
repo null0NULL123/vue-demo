@@ -12,12 +12,14 @@ import {
     CaretBottom
 } from '@element-plus/icons-vue'
 import avatar from '@/assets/default.png'
+import useUserPicStore from '@/stores/userPic.js'
 
 import {userInfoService} from '@/api/user.js'
 import useUserInfoStore from '@/stores/userInfo.js'
 import {useTokenStore} from '@/stores/token.js'
 const tokenStore = useTokenStore();
 const userInfoStore = useUserInfoStore();
+const userPicStore = useUserPicStore();
 //调用函数,获取用户详细信息
 const getUserInfo = async()=>{
     //调用接口
@@ -95,7 +97,7 @@ const handleCommand = (command)=>{
                     </el-menu>
                     <el-dropdown @command="handleCommand">
                         <div class="el-dropdown__box">
-                            <el-avatar :size="36" :src="userInfoStore.info.avatar || avatar" />
+                            <el-avatar :size="36" :src="userPicStore.Pic?.url || avatar" />
                             <el-icon><CaretBottom /></el-icon>
                         </div>
                         <template #dropdown>
