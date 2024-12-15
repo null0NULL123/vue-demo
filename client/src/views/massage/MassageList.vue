@@ -1,8 +1,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { messageListService, messageGetService, messageSendService } from '@/api/message.js'
+import { getUserInfoService } from '@/api/user.js'
 import useUserInfoStore from '@/stores/userInfo.js'
 import useUserPicStore from '@/stores/userPic.js'
+import useUserStore from '@/stores/user.js'
+import { Search } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+const userStore = useUserStore()
 const userInfoStore = useUserInfoStore()
 const userPicStore = useUserPicStore()
 
@@ -17,7 +22,19 @@ const currentUser = {
 const contacts = ref([])
 // 所有聊天记录
 const allMessages = ref({})
-
+const allUsers = ref({})
+const getUsers = async () => {
+    console.log(userStore.info);
+    for(const i of userStore.info){
+        const data = {
+            id: i
+        }
+        const result = await getUserInfoService(data)
+        console.log(result);
+        allUsers.value[result.data] = i
+    }
+    console.log(allUsers);
+}
 // 获取联系人列表
 const getContactList = async () => {
     try {
@@ -134,7 +151,50 @@ const sendMessage = async () => {
 // 组件挂载时获取联系人列表
 onMounted(() => {
     getContactList()
+    getUsers()
 })
+
+// 添加搜索相关的响应式变量
+const searchKeyword = ref('')
+const searchResults = ref([])
+const showSearchDialog = ref(false)
+const searchLoading = ref(false)
+
+// 搜索用户方法
+const searchUsers = async () => {
+    if (!searchKeyword.value.trim()) {
+        ElMessage.warning('请输入搜索关键词')
+        return
+    }
+    
+    try {
+        searchLoading.value = true
+        const data = {
+            sender_id: currentUser.id,
+            recipient_id: allUsers.value[searchKeyword.value],
+            content: "你好",
+            timestamp: new Date().toISOString()
+        }
+        const result = await messageSendService(data)
+        // 过滤掉当前用户自己
+        
+    } catch (error) {
+        console.error('搜索用户失败:', error)
+        ElMessage.error('搜索失败')
+    } finally {
+        searchLoading.value = false
+    }
+}
+
+// 选择用户开始聊天
+const startChat = (user) => {
+    showSearchDialog.value = false
+    handleContactSelect({
+        id: user.id,
+        username: user.username,
+        avatar: userPicStore.getPic(user.id)
+    })
+}
 </script>
 <template>
     <el-card class="page-container">
@@ -142,6 +202,17 @@ onMounted(() => {
         <el-container class="massage-container">
             <!-- 联系人列表 -->
             <el-aside width="300px" class="contact-list">
+                <!-- 添加搜索按钮 -->
+                <div class="search-header">
+                    <el-button 
+                        type="primary" 
+                        :icon="Search"
+                        @click="showSearchDialog = true"
+                    >
+                        查找用户
+                    </el-button>
+                </div>
+
                 <div class="contacts">
                     <div v-for="contact in contacts" :key="contact"
                         :class="['contact-item', { active: selectedContact?.id === contact.id }]"
@@ -191,6 +262,47 @@ onMounted(() => {
                 <el-empty description="请选择联系人开始聊天" />
             </el-main>
         </el-container>
+
+        <!-- 添加搜索对话框 -->
+        <el-dialog
+            v-model="showSearchDialog"
+            title="搜索用户"
+            width="500px"
+        >
+            <div class="search-container">
+                <el-input
+                    v-model="searchKeyword"
+                    placeholder="输入用户名搜索"
+                    @keyup.enter="searchUsers"
+                >
+                    <template #append>
+                        <el-button :icon="Search" @click="searchUsers" />
+                    </template>
+                </el-input>
+
+                <div class="search-results" v-loading="searchLoading">
+                    <div 
+                        v-for="user in searchResults" 
+                        :key="user.id"
+                        class="search-item"
+                        @click="startChat(user)"
+                    >
+                        <el-avatar 
+                            :size="40" 
+                            :src="userPicStore.getPic(user.id)" 
+                        />
+                        <div class="user-info">
+                            <div class="username">{{ user.username }}</div>
+                            <div class="email">{{ user.email }}</div>
+                        </div>
+                    </div>
+                    <el-empty 
+                        v-if="!searchLoading && searchResults.length === 0"
+                        description="暂无搜索结果" 
+                    />
+                </div>
+            </div>
+        </el-dialog>
     </el-card>
 </template>
 
@@ -369,6 +481,51 @@ onMounted(() => {
         }
         .message-time{
             text-align: left;
+        }
+    }
+}
+
+.search-header {
+    padding: 10px;
+    border-bottom: 1px solid #dcdfe6;
+    
+    .el-button {
+        width: 100%;
+    }
+}
+
+.search-container {
+    .search-results {
+        margin-top: 20px;
+        max-height: 400px;
+        overflow-y: auto;
+
+        .search-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+
+            &:hover {
+                background-color: #f5f7fa;
+            }
+
+            .user-info {
+                margin-left: 12px;
+
+                .username {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #303133;
+                }
+
+                .email {
+                    font-size: 12px;
+                    color: #909399;
+                    margin-top: 4px;
+                }
+            }
         }
     }
 }
