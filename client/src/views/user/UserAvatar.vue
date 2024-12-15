@@ -16,26 +16,26 @@ const imgUrl = ref('')
 // 图片上传成功的回调函数
 const uploadSuccess = (file) => {
     const reader = new FileReader()
-
+    console.log(file)
     reader.onload = (e) => {
         const base64Image = e.target.result
 
         try {
             // 更新store中的头像信息
-            userPicStore.setPic(userInfoStore.info.id, 
+            userPicStore.setPic(userInfoStore.info.id,
                 base64Image)
 
-        // 更新显示的图片
-        imgUrl.value = userPicStore.getPic(userInfoStore.info.id)
-        console.log(imgUrl.value)
-        ElMessage.success('头像更新成功')
-    } catch (error) {
-        console.error('保存头像失败:', error)
-        ElMessage.error('头像更新失败')
+            // 更新显示的图片
+            imgUrl.value = userPicStore.getPic(userInfoStore.info.id)
+            console.log(imgUrl.value)
+            ElMessage.success('头像更新成功')
+        } catch (error) {
+            console.error('保存头像失败:', error)
+            ElMessage.error('头像更新失败')
+        }
     }
-}
 
-reader.readAsDataURL(file.raw)
+    reader.readAsDataURL(file.raw)
 }
 
 // 头像更新
