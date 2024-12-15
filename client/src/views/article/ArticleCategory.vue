@@ -1,304 +1,303 @@
-<script setup>
-import {
-    Edit,
-    Delete,
-    View
-} from '@element-plus/icons-vue'
+<template>
+    <div class="zhihu-like-container">
+      <header class="header">
+        <el-input
+          v-model="searchTitle"
+          placeholder="搜索帖子"
+          prefix-icon="el-icon-search"
+          @keyup.enter="searchArticles"
+          class="search-input"
+          clearable
+        >
+          <template #append>
+            <el-button @click="searchArticles">搜索</el-button>
+          </template>
+        </el-input>
+      </header>
+  
+      <main class="main-content">
+        <!-- <aside class="sidebar">
+          <h3>分类</h3>
+          <el-radio-group v-model="categoryId" @change="articleList">
+            <el-radio-button :label="''">全部</el-radio-button>
+            <el-radio-button v-for="category in categorys" :key="category.id" :label="category.id">
+              {{ category.categoryName }}
+            </el-radio-button>
+          </el-radio-group>
+        </aside> -->
+  
+        <section class="article-list">
+          <el-card v-for="article in filteredArticles" :key="article.id" class="article-card">
+            <template #header>
+              <div class="article-header">
+                <h2 @click="showArticleDetail(article.id)">{{ article.title }}</h2>
+                <el-tag size="small">{{ article.categoryName }}</el-tag>
+              </div>
+            </template>
+            <div class="article-content">
+              <p v-html="sanitizeAndTruncateContent(article.content)"></p>
+            </div>
+            <div class="article-footer">
+              <span>{{ formatDate(article.createTime) }}</span>
+              <el-button type="text" @click="showArticleDetail(article.id)">阅读全文</el-button>
+            </div>
+          </el-card>
+        </section>
+      </main>
+  
+      <el-pagination
+        v-model:current-page="pageNum"
+        v-model:page-size="pageSize"
+        :page-sizes="[5, 10, 20, 50]"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="filteredArticles.length"
+        @size-change="onSizeChange"
+        @current-change="onCurrentChange"
+      />
+  
+      <el-dialog
+        v-model="dialogVisible"
+        :title="currentArticle.title"
+        width="70%"
+        :before-close="handleClose"
+        class="article-detail-dialog"
+      >
+        <div class="article-content" v-html="currentArticle.content"></div>
+        <div v-if="currentArticle.coverImg" class="article-image">
+          <img :src="currentArticle.coverImg" alt="Article cover image" />
+        </div>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="dialogVisible = false">关闭</el-button>
+          </span>
+        </template>
+      </el-dialog>
+    </div>
+  </template>
+  
+  <script setup>
+  import { ref, onMounted, watch, computed } from 'vue'
+  import { ElMessage } from 'element-plus'
+  import { articleCategoryListService, articleListService, articleDetailService } from '@/api/article.js'
+  
+  const categorys = ref([])
+  const articles = ref([])
+  const searchTitle = ref('')
+  const categoryId = ref('')
+  const pageNum = ref(1)
+  const pageSize = ref(10)
+  const total = ref(0)
+  const dialogVisible = ref(false)
+  const currentArticle = ref({})
+  
+  const filteredArticles = computed(() => {
 
-import { ref } from 'vue'
-
-//帖子分类数据模型
-const categorys = ref([
-    {
-        "id": 3,
-        "categoryName": "美食",
-        "categoryAlias": "my",
-        "createTime": "2023-09-02 12:06:59",
-        "updateTime": "2023-09-02 12:06:59"
-    },
-    {
-        "id": 4,
-        "categoryName": "娱乐",
-        "categoryAlias": "yl",
-        "createTime": "2023-09-02 12:08:16",
-        "updateTime": "2023-09-02 12:08:16"
-    },
-    {
-        "id": 5,
-        "categoryName": "军事",
-        "categoryAlias": "js",
-        "createTime": "2023-09-02 12:08:33",
-        "updateTime": "2023-09-02 12:08:33"
+    let result = articles.value.filter(article => article.state == '已发布')
+    if (!searchTitle.value) {
+      return result
     }
-])
-
-//用户搜索时选中的分类id
-const categoryId = ref('')
-
-//用户搜索时选中的发布状态
-const state = ref('')
-
-//帖子列表数据模型
-const articles = ref([
-
-    {
-        "id": 5,
-        "title": "陕西旅游攻略",
-        "content": "兵马俑,华清池,法门寺,华山...爱去哪去哪...",
-        "coverImg": "https://big-event-gwd.oss-cn-beijing.aliyuncs.com/9bf1cf5b-1420-4c1b-91ad-e0f4631cbed4.png",
-        "state": "草稿",
-        "categoryId": 2,
-        "createTime": "2023-09-03 11:55:30",
-        "updateTime": "2023-09-03 11:55:30"
-    },
-])
-
-//分页条数据模型
-const pageNum = ref(1)//当前页
-const total = ref(20)//总条数
-const pageSize = ref(5)//每页条数
-
-//当每页条数发生了变化，调用此函数
-const onSizeChange = (size) => {
-    pageSize.value = size
-    articleList()
-}
-//当前页码发生变化，调用此函数
-const onCurrentChange = (num) => {
-    pageNum.value = num
-    articleList()
-}
-
-
-//回显帖子分类
-import { articleCategoryListService, articleListService,articleAddService } from '@/api/article.js'
-const articleCategoryList = async () => {
-    let result = await articleCategoryListService();
-    
-    categorys.value = result.data;
-}
-
-//获取帖子列表数据
-const articleList = async () => {
-    let params = {
+    return result.filter(article => 
+      article.title.toLowerCase().includes(searchTitle.value.toLowerCase()) ||
+      article.content.toLowerCase().includes(searchTitle.value.toLowerCase())
+    )
+  })
+  
+  const articleCategoryList = async () => {
+    try {
+      const result = await articleCategoryListService()
+      categorys.value = result.data
+    } catch (error) {
+      console.error('Failed to fetch categories:', error)
+      ElMessage.error('获取分类列表失败')
+    }
+  }
+  
+  const articleList = async () => {
+    try {
+      const params = {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        state: state.value ? state.value : null,
-        categoryId: categoryId.value ? categoryId.value : null
+        categoryId: categoryId.value || null,
+        title: searchTitle.value || null
+      }
+      const result = await articleListService(params)
+      
+      articles.value = result.data.items
+      total.value = result.data.total
+      
+      articles.value.forEach(article => {
+        const category = categorys.value.find(c => c.id === article.categoryId)
+        article.categoryName = category ? category.categoryName : '未分类'
+      })
+      console.log(articles.value)
+    } catch (error) {
+      console.error('Failed to fetch articles:', error)
+      ElMessage.error('获取帖子列表失败')
     }
-    let result = await articleListService(params);
-    
-    // 如果有搜索关键词，对结果进行筛选
+  }
+  
+  const searchArticles = () => {
     if (searchTitle.value) {
-        // 将搜索关键词转为小写，用于不区分大小写的搜索
-        const keyword = searchTitle.value.toLowerCase();
-        
-        // 筛选标题中包含关键词的文章
-        result.data.items = result.data.items.filter(article => {
-            return article.title.toLowerCase().includes(keyword);
-        });
-        
-        // 更新总数
-        result.data.total = result.data.items.length;
+      // 如果有搜索词,只在前端筛选
+      pageNum.value = 1
+    } else {
+      // 如果搜索词为空,重新从后端获取所有文章
+      articleList()
     }
+  }
+  
+  const onSizeChange = (size) => {
+    pageSize.value = size
+    if (!searchTitle.value) {
+      articleList()
+    }
+  }
+  
+  const onCurrentChange = (num) => {
+    pageNum.value = num
+    if (!searchTitle.value) {
+      articleList()
+    }
+  }
+  
+  const sanitizeAndTruncateContent = (content) => {
+    // 使用 DOMParser 来解析 HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
     
-    //渲染视图
-    total.value = result.data.total;
-    articles.value = result.data.items;
-
-    //处理数据,给数据模型扩展categoryName属性
-    for (let i = 0; i < articles.value.length; i++) {
-        let article = articles.value[i];
-        for (let j = 0; j < categorys.value.length; j++) {
-            if (article.categoryId == categorys.value[j].id) {
-                article.categoryName = categorys.value[j].categoryName;
-            }
-        }
+    // 获取纯文本内容
+    const textContent = doc.body.textContent || "";
+    
+    // 截断内容
+    const truncated = textContent.length > 100 ? textContent.slice(0, 100) + '...' : textContent;
+    
+    // 转义 HTML 特殊字符
+    return truncated.replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+  }
+  
+  const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
+  }
+  
+  const showArticleDetail = async (id) => {
+    try {
+      const result = await articleDetailService(id)
+      currentArticle.value = result.data
+      dialogVisible.value = true
+    } catch (error) {
+      console.error('Failed to fetch article detail:', error)
+      ElMessage.error('获取帖子详情失败')
     }
-}
-
-
-articleCategoryList()
-articleList();
-
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
-import { Plus } from '@element-plus/icons-vue'
-//控制抽屉是否显示
-const visibleDrawer = ref(false)
-//添加表单数据模型
-const articleModel = ref({
-    title: '',
-    categoryId: '',
-    coverImg: '',
-    content: '',
-    state: ''
-})
-
-
-//导入token
-import { useTokenStore } from '@/stores/token.js';
-const tokenStore = useTokenStore();
-
-//上传成功的回调函数
-const uploadSuccess = (result)=>{
-    articleModel.value.coverImg = result.data;
-    console.log(result.data);
-}
-
-//添加帖子
-import {ElMessage} from 'element-plus'
-const addArticle = async (clickState)=>{
-    //把发布状态赋值给数据模型
-    articleModel.value.state = clickState;
-
-    //调用接口
-    let result = await articleAddService(articleModel.value);
-
-    ElMessage.success(result.msg? result.msg:'添加成功');
-
-    //让抽屉消失
-    visibleDrawer.value = false;
-
-    //刷新当前列表
+  }
+  
+  const handleClose = (done) => {
+    done()
+  }
+  
+  onMounted(() => {
+    articleCategoryList()
     articleList()
-}
+  })
 
-const searchTitle = ref('') // 添加搜索关键词变量
-</script>
-<template>
-    <el-card class="page-container">
-
-        <!-- 搜索表单 -->
-        <el-form inline>
-            <el-form-item label="搜索：">
-                <el-input 
-                    v-model="searchTitle"
-                    placeholder="请输入标题关键词"
-                    clearable
-                    @keyup.enter="articleList"
-                ></el-input>
-            </el-form-item>
-
-            <el-form-item>
-                <el-button type="primary" @click="articleList">搜索</el-button>
-                <el-button @click="searchTitle = ''; categoryId = ''; state = ''; articleList()">重置</el-button>
-            </el-form-item>
-        </el-form>
-        <!-- 帖子列表 -->
-        <el-table :data="articles" style="width: 100%">
-            <el-table-column label="帖子标题" width="400" prop="title"></el-table-column>
-            <el-table-column label="分类" prop="categoryName"></el-table-column>
-            <el-table-column label="发表时间" prop="createTime"> </el-table-column>
-            <el-table-column label="状态" prop="state"></el-table-column>
-
-            <template #empty>
-                <el-empty description="没有数据" />
-            </template>
-        </el-table>
-        <!-- 分页条 -->
-        <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[3, 5, 10, 15]"
-            layout="jumper, total, sizes, prev, pager, next" background :total="total" @size-change="onSizeChange"
-            @current-change="onCurrentChange" style="margin-top: 20px; justify-content: flex-end" />
-
-        <!-- 抽屉 -->
-        <el-drawer v-model="visibleDrawer" title="添加帖子" direction="rtl" size="50%">
-            <!-- 添加帖子表单 -->
-            <el-form :model="articleModel" label-width="100px">
-                <el-form-item label="帖子标题">
-                    <el-input v-model="articleModel.title" placeholder="请输入标题"></el-input>
-                </el-form-item>
-                <el-form-item label="帖子分类">
-                    <el-select placeholder="请选择" v-model="articleModel.categoryId">
-                        <el-option v-for="c in categorys" :key="c.id" :label="c.categoryName" :value="c.id">
-                        </el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="帖子封面">
-
-                    <!-- 
-                        auto-upload:设置是否自动上传
-                        action:设置服务器接口路径
-                        name:设置上传的文件字段名
-                        headers:设置上传的请求头
-                        on-success:设置上传成功的回调函数
-                     -->
-                   
-                    <el-upload class="avatar-uploader" :auto-upload="true" :show-file-list="false"
-                    action="/api/upload"
-                    name="file"
-                    :headers="{'Authorization':tokenStore.token}"
-                    :on-success="uploadSuccess"
-                    >
-                        <img v-if="articleModel.coverImg" :src="articleModel.coverImg" class="avatar" />
-                        <el-icon v-else class="avatar-uploader-icon">
-                            <Plus />
-                        </el-icon>
-                    </el-upload>
-                </el-form-item>
-                <el-form-item label="帖子内容">
-                    <div class="editor">
-                        <quill-editor theme="snow" v-model:content="articleModel.content" contentType="html">
-                        </quill-editor>
-                    </div>
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" @click="addArticle('已发布')">发布</el-button>
-                    <el-button type="info" @click="addArticle('草稿')">草稿</el-button>
-                </el-form-item>
-            </el-form>
-        </el-drawer>
-    </el-card>
-</template>
-<style lang="scss" scoped>
-.page-container {
-    min-height: 100%;
-    box-sizing: border-box;
-
-    .header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+  watch(searchTitle, (newValue, oldValue) => {
+    if (newValue === '' && oldValue !== '') {
+      articleList()
+    } else {
+      searchArticles()
     }
-}
-
-/* 抽屉样式 */
-.avatar-uploader {
-    :deep() {
-        .avatar {
-            width: 178px;
-            height: 178px;
-            display: block;
-        }
-
-        .el-upload {
-            border: 1px dashed var(--el-border-color);
-            border-radius: 6px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: var(--el-transition-duration-fast);
-        }
-
-        .el-upload:hover {
-            border-color: var(--el-color-primary);
-        }
-
-        .el-icon.avatar-uploader-icon {
-            font-size: 28px;
-            color: #8c939d;
-            width: 178px;
-            height: 178px;
-            text-align: center;
-        }
+  })
+  </script>
+  
+  <style scoped>
+  .zhihu-like-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .search-input {
+    width: 300px;
+  }
+  
+  .main-content {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .sidebar {
+    width: 200px;
+  }
+  
+  .article-list {
+    flex-grow: 1;
+  }
+  
+  .article-card {
+    margin-bottom: 20px;
+  }
+  
+  .article-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .article-header h2 {
+    cursor: pointer;
+    color: #1a1a1a;
+  }
+  
+  .article-header h2:hover {
+    color: #0066ff;
+  }
+  
+  .article-content {
+    color: #646464;
+  }
+  
+  .article-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    color: #8590a6;
+  }
+  .article-detail-dialog {
+    .el-dialog__body {
+      max-height: 70vh;
+      overflow-y: auto;
     }
-}
 
-.editor {
-    width: 100%;
-
-    :deep(.ql-editor) {
-        min-height: 200px;
+    .article-content {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #333;
+      margin-bottom: 20px;
     }
-}
-</style>
+
+    .article-image {
+      text-align: center;
+      margin-top: 20px;
+
+      img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+  </style>
+

@@ -37,3 +37,12 @@ export const userAvatarUpdateService = (avatarUrl)=>{
     params.append('avatarUrl',avatarUrl)
     return request.patch('/user/updateAvatar',params)
 }
+
+//获取其他用户信息
+export const getUserInfoService = (data)=>{
+    const params = new URLSearchParams();
+    for(let key in data){
+        params.append(key,data[key])
+    }
+    return request.post('/user/getuser',params)
+}

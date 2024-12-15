@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { messageListService, messageGetService, messageSendService } from '@/api/message.js'
 import useUserInfoStore from '@/stores/userInfo.js'
-
+import { getUserInfoService } from '@/api/user.js'
 const userInfoStore = useUserInfoStore()
 
 // 当前用户信息
@@ -38,6 +38,7 @@ const getChatHistory = async (userId) => {
             recipient_id: userId,
             sender_id: currentUser.id
         }
+        console.log(data);
         const result = await messageGetService(data)
         console.log('获取到的聊天记录:', result);
         // 确保 result.data 是数组
@@ -54,7 +55,7 @@ const getChatHistory = async (userId) => {
             sender_id: msg.sender_id,
             recepient_id: msg.recepient_id,
             content: msg.content,
-            timestamp: msg.create_time
+            timestamp: msg.timestamp
         }))
         console.log("与特定用户的聊天记录:",allMessages.value[userId]);
         return allMessages.value[userId].reverse()    
@@ -72,12 +73,13 @@ const selectedContact = ref({
 
 // 监听选中联系人变化
 const handleContactSelect = async (contact) => {
+    console.log(contact);
     selectedContact.value = {
-        id: contact,
-        name: contacts.value.find(c => c === contact)?.name,
+        id: contact.id,
+        name: contacts.value.find(c => c === contact)?.username,
         avatar: contacts.value.find(c => c === contact)?.avatar
     }
-    
+    console.log(selectedContact.value);
     if (contact) {
         const messages = await getChatHistory(contact)
         currentMessages.value = messages || []
@@ -97,8 +99,8 @@ const inputMessage = ref('')
 
 // 发送消息
 const sendMessage = async () => {
-    console.log(selectedContact.id);
-    if (!inputMessage.value.trim() || !selectedContact.id) return
+    console.log(selectedContact.value.id);
+    if (!inputMessage.value.trim() || !selectedContact.value.id) return
 
     try {
 
@@ -106,24 +108,18 @@ const sendMessage = async () => {
             sender_id: currentUser.id,
             content: inputMessage.value,
             timestamp: new Date().toISOString(),
-            recipient_id: selectedContact.id,
+            recipient_id: selectedContact.value.id,
 
         }
         console.log(newMessage);
         let result = await messageSendService(newMessage)
         console.log(result);
         // 更新本地消息列表
-        if (!allMessages.value[selectedContact.id]) {
-            allMessages.value[selectedContact.id] = []
+        if (!allMessages.value[selectedContact.value.id]) {
+            allMessages.value[selectedContact.value.id] = []
         }
-        allMessages.value[selectedContact.id].push(newMessage)
+        allMessages.value[selectedContact.value.id].push(newMessage)
 
-        // 更新联系人最后一条消息
-        const contact = contacts.value.find(c => c.id === selectedContact.id)
-        if (contact) {
-            contact.lastMessage = inputMessage.value
-            contact.lastTime = newMessage.timestamp
-        }
 
         inputMessage.value = ''
     } catch (error) {
@@ -144,11 +140,11 @@ onMounted(() => {
             <el-aside width="300px" class="contact-list">
                 <div class="contacts">
                     <div v-for="contact in contacts" :key="contact"
-                        :class="['contact-item', { active: selectedContact?.id === contact }]"
-                        @click="handleContactSelect(contact)">
+                        :class="['contact-item', { active: selectedContact?.id === contact.id }]"
+                        @click="handleContactSelect(contact.id)">
                         <el-avatar :size="40" :src="contact.avatar" />
                         <div class="contact-info">
-                            <div class="contact-name">{{ contact.name }}</div>
+                            <div class="contact-name">{{ contact.username }}</div>
                             <div class="last-message">{{ contact.lastMessage }}</div>
                         </div>
                         <div class="contact-time">{{ contact.lastTime }}</div>
