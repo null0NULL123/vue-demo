@@ -16,15 +16,15 @@
       </header>
   
       <main class="main-content">
-        <!-- <aside class="sidebar">
-          <h3>分类</h3>
-          <el-radio-group v-model="categoryId" @change="articleList">
-            <el-radio-button :label="''">全部</el-radio-button>
-            <el-radio-button v-for="category in categorys" :key="category.id" :label="category.id">
-              {{ category.categoryName }}
-            </el-radio-button>
-          </el-radio-group>
-        </aside> -->
+        <aside class="sidebar">
+          <h3>热榜</h3>
+          <ul class="hot-search-list">
+            <li v-for="(item, index) in hotSearchList" :key="index" @click="setSearchTitle(item)">
+              <span class="hot-search-rank">{{ index + 1 }}</span>
+              {{ item }}
+            </li>
+          </ul>
+        </aside>
   
         <section class="article-list">
           <el-card v-for="article in filteredArticles" :key="article.id" class="article-card">
@@ -94,7 +94,6 @@
   const currentArticle = ref({})
   const avatar = ref('')
   const filteredArticles = computed(() => {
-
     let result = articles.value.filter(article => article.state == '已发布')
     if (!searchTitle.value) {
       return result
@@ -218,6 +217,24 @@
       searchArticles()
     }
   })
+
+  const hotSearchList = ref([
+    'Vue 3 新特性',
+    'Element Plus 使用技巧',
+    '前端性能优化',
+    'TypeScript 入门指南',
+    'Vite 构建工具',
+    'Composition API 最佳实践',
+    'Pinia 状态管理',
+    'Vue Router 4 教程',
+    'SSR 服务端渲染',
+    'Web Components 开发'
+  ])
+
+  const setSearchTitle = (title) => {
+    searchTitle.value = title
+    searchArticles()
+  }
   </script>
   
   <style scoped>
@@ -245,6 +262,7 @@
   
   .sidebar {
     width: 200px;
+    margin-right: 60px;
   }
   
   .article-list {
@@ -306,5 +324,37 @@
       }
     }
   }
-  </style>
+  .hot-search-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
 
+  .hot-search-list li {
+    cursor: pointer;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.3s;
+  }
+
+  .hot-search-list li:hover {
+    background-color: #f5f5f5;
+  }
+
+  .hot-search-rank {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    background-color: #f0f0f0;
+    color: #999;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+
+  .hot-search-list li:nth-child(-n+3) .hot-search-rank {
+    background-color: #ff4d4f;
+    color: #fff;
+  }
+  </style>
